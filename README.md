@@ -9,7 +9,7 @@ npm install
 ```
 sudo -u postgres psql
 
-CREATE DATABASE notesapp;
+CREATE DATABASE music;
 
 GRANT ALL PRIVILEGES ON DATABASE music TO <<username>>;
 ```
