@@ -11,11 +11,11 @@ exports.up = (pgm) => {
       notNull: true,
     },
     year: {
-      type: 'TEXT',
+      type: 'INT',
       notNull: true,
     },
     performer: {
-      type: 'TEXT[]',
+      type: 'TEXT',
       notNull: true,
     },
     genre: {

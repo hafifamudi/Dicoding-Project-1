@@ -16,14 +16,14 @@ class MusicsHandler {
     try {
       this._validator.validateMusicPayload(request.payload);
       const {
-        title = 'untitled',
+        title,
         year,
         performer,
         genre,
         duration,
       } = request.payload;
 
-      const MusicId = await this._service.addMusic({
+      const songId = await this._service.addMusic({
         title,
         year,
         performer,
@@ -33,9 +33,9 @@ class MusicsHandler {
 
       const response = h.response({
         status: 'success',
-        message: 'Catatan berhasil ditambahkan',
+        message: 'Lagu berhasil ditambahkan',
         data: {
-          MusicId,
+          songId,
         },
       });
       response.code(201);
@@ -62,11 +62,18 @@ class MusicsHandler {
   }
 
   async getMusicsHandler() {
-    const Musics = await this._service.getMusics();
+    const getSongs = await this._service.getMusics();
+
+    const songs = getSongs.map((song) => ({
+      id: song.id,
+      title: song.title,
+      performer: song.performer,
+    }));
+
     return {
       status: 'success',
       data: {
-        Musics,
+        songs,
       },
     };
   }
@@ -74,11 +81,12 @@ class MusicsHandler {
   async getMusicByIdHandler(request, h) {
     try {
       const { id } = request.params;
-      const Music = await this._service.getMusicById(id);
+      const song = await this._service.getMusicById(id);
+
       return {
         status: 'success',
         data: {
-          Music,
+          song,
         },
       };
     } catch (error) {
@@ -106,7 +114,7 @@ class MusicsHandler {
     try {
       this._validator.validateMusicPayload(request.payload);
       const {
-        title = 'untitled',
+        title,
         year,
         performer,
         genre,
@@ -124,7 +132,7 @@ class MusicsHandler {
 
       return {
         status: 'success',
-        message: 'Catatan berhasil diperbarui',
+        message: 'lagu berhasil diperbarui',
       };
     } catch (error) {
       if (error instanceof ClientError) {
@@ -154,7 +162,7 @@ class MusicsHandler {
 
       return {
         status: 'success',
-        message: 'Catatan berhasil dihapus',
+        message: 'lagu berhasil dihapus',
       };
     } catch (error) {
       if (error instanceof ClientError) {

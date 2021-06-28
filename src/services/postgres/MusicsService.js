@@ -12,7 +12,7 @@ class MusicsService {
     this._pool = new Pool();
   }
 
-  async addNote({
+  async addMusic({
     title,
     year,
     performer,
@@ -20,12 +20,15 @@ class MusicsService {
     duration,
   }) {
     const id = nanoid(16);
+    const song = 'song-';
+
+    const idSong = song.concat(id);
     const created_at = new Date().toISOString();
     const updated_at = created_at;
 
     const query = {
-      text: 'INSERT INTO music VALUES($1, $2, $3, $4, $5, $6) RETURNING id',
-      values: [id, title, year, performer, genre, duration, created_at, updated_at],
+      text: 'INSERT INTO music VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+      values: [idSong, title, year, performer, genre, duration, created_at, updated_at],
     };
 
     const result = await this._pool.query(query);
