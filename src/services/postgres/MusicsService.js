@@ -4,6 +4,7 @@ const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
+const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 const { mapDBToModel } = require('../../utils');
 
@@ -12,12 +13,28 @@ class MusicsService {
     this._pool = new Pool();
   }
 
+  async verifyNoteOwner(id, owner) {
+    const query = {
+      text: 'SELECT * FROM notes WHERE id = $1',
+      values: [id],
+    };
+    const result = await this._pool.query(query);
+    if (!result.rows.length) {
+      throw new NotFoundError('Catatan tidak ditemukan');
+    }
+    const note = result.rows[0];
+    if (note.owner !== owner) {
+      throw new AuthorizationError('Anda tidak berhak mengakses resource ini');
+    }
+  }
+
   async addMusic({
     title,
     year,
     performer,
     genre,
     duration,
+    owner,
   }) {
     const id = nanoid(16);
     const song = 'song-';
@@ -27,8 +44,8 @@ class MusicsService {
     const updated_at = created_at;
 
     const query = {
-      text: 'INSERT INTO music VALUES($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-      values: [idSong, title, year, performer, genre, duration, created_at, updated_at],
+      text: 'INSERT INTO music VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+      values: [idSong, title, year, performer, genre, duration, owner, created_at, updated_at],
     };
 
     const result = await this._pool.query(query);
@@ -40,8 +57,12 @@ class MusicsService {
     return result.rows[0].id;
   }
 
-  async getMusics() {
-    const result = await this._pool.query('SELECT * FROM music');
+  async getMusics(owner) {
+    const query = {
+      text: 'SELECT * FROM notes WHERE owner = $1',
+      values: [owner],
+    };
+    const result = await this._pool.query(query);
     return result.rows.map(mapDBToModel);
   }
 

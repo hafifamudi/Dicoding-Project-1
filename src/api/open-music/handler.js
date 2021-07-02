@@ -61,8 +61,9 @@ class MusicsHandler {
     }
   }
 
-  async getMusicsHandler() {
-    const getSongs = await this._service.getMusics();
+  async getMusicsHandler(request) {
+    const { id: credentialId } = request.auth.credentials;
+    const getSongs = await this._service.getMusics(credentialId);
 
     const songs = getSongs.map((song) => ({
       id: song.id,
@@ -81,6 +82,9 @@ class MusicsHandler {
   async getMusicByIdHandler(request, h) {
     try {
       const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
+
+      await this._service.verifyNoteOwner(id, credentialId);
       const song = await this._service.getMusicById(id);
 
       return {
@@ -122,6 +126,9 @@ class MusicsHandler {
       } = request.payload;
       const { id } = request.params;
 
+      const { id: credentialId } = request.auth.credentials;
+      await this._service.verifyNoteOwner(id, credentialId);
+
       await this._service.editMusicById(id, {
         title,
         year,
@@ -158,6 +165,9 @@ class MusicsHandler {
   async deleteMusicByIdHandler(request, h) {
     try {
       const { id } = request.params;
+      const { id: credentialId } = request.auth.credentials;
+
+      await this._service.verifyNoteOwner(id, credentialId);
       await this._service.deleteMusicById(id);
 
       return {
