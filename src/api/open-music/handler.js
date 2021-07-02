@@ -84,7 +84,7 @@ class MusicsHandler {
       const { id } = request.params;
       const { id: credentialId } = request.auth.credentials;
 
-      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.verifyNoteAccess(id, credentialId);
       const song = await this._service.getMusicById(id);
 
       return {
@@ -127,7 +127,7 @@ class MusicsHandler {
       const { id } = request.params;
 
       const { id: credentialId } = request.auth.credentials;
-      await this._service.verifyNoteOwner(id, credentialId);
+      await this._service.verifyNoteAccess(id, credentialId);
 
       await this._service.editMusicById(id, {
         title,

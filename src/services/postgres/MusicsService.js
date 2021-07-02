@@ -9,8 +9,9 @@ const AuthorizationError = require('../../exceptions/AuthorizationError');
 const { mapDBToModel } = require('../../utils');
 
 class MusicsService {
-  constructor() {
+  constructor(collaborationService) {
     this._pool = new Pool();
+    this._collaborationService = collaborationService;
   }
 
   async verifyNoteOwner(id, owner) {
@@ -59,7 +60,10 @@ class MusicsService {
 
   async getMusics(owner) {
     const query = {
-      text: 'SELECT * FROM notes WHERE owner = $1',
+      text: `SELECT music.* FROM music
+      LEFT JOIN collaborations ON collaborations.music_id = music.id
+      WHERE music.owner = $1 OR collaborations.user_id = $1
+      GROUP BY music.id`,
       values: [owner],
     };
     const result = await this._pool.query(query);
@@ -68,13 +72,16 @@ class MusicsService {
 
   async getMusicById(id) {
     const query = {
-      text: 'SELECT * FROM music WHERE id = $1',
+      text: `SELECT notes.*, users.username
+      FROM notes
+      LEFT JOIN users ON users.id = notes.owner
+      WHERE notes.id = $1`,
       values: [id],
     };
     const result = await this._pool.query(query);
 
     if (!result.rows.length) {
-      throw new NotFoundError('Catatan tidak ditemukan');
+      throw new NotFoundError('Music tidak ditemukan');
     }
 
     return result.rows.map(mapDBToModel)[0];
@@ -110,6 +117,21 @@ class MusicsService {
 
     if (!result.rows.length) {
       throw new NotFoundError('Catatan gagal dihapus. Id tidak ditemukan');
+    }
+  }
+
+  async verifyNoteAccess(noteId, userId) {
+    try {
+      await this.verifyNoteOwner(noteId, userId);
+    } catch (error) {
+      if (error instanceof NotFoundError) {
+        throw error;
+      }
+      try {
+        await this._collaborationService.verifyCollaborator(noteId, userId);
+      } catch {
+        throw error;
+      }
     }
   }
 }
